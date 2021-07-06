@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_template/pages/home/index.dart';
+import 'package:flutter_template/utils/request.dart';
 
 class LoginInput extends StatelessWidget {
   const LoginInput({Key key}) : super(key: key);
@@ -35,6 +37,18 @@ class CardInput extends StatefulWidget {
 }
 
 class _CardInputState extends State<CardInput> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadData();
+  }
+
+  void loadData() async {
+    var res = await HttpConfig.getInstance().dio.get('cjnews/getDjBanner');
+    print('res' + res.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -93,11 +107,17 @@ class _CardInputState extends State<CardInput> {
             Padding(
               padding: EdgeInsets.only(top: 20, left: 20, right: 20),
               child: Row(
+                //row默认占满父盒子的宽度
                 children: <Widget>[
                   Expanded(
                     child: new RaisedButton(
                       onPressed: () {
                         print("  我点击了  Padding  下的  RaisedButton");
+                        Navigator.of(context)
+                            .push(MaterialPageRoute(builder: (context) {
+                          return HomePage();
+                        }));
+                        // Navigator.of(context).popAndPushNamed('/home');
                       },
                       elevation: 5.0,
                       shape: StadiumBorder(
