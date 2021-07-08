@@ -1,46 +1,92 @@
+// import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_template/utils/config.dart';
+// import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter_template/utils/loading.dart';
 
-// dio 配置项
-class HttpConfig {
-  static HttpConfig _instance;
-  Dio dio;
-  static HttpConfig getInstance() {
-    if (_instance == null) _instance = new HttpConfig();
+import 'api.dart';
+
+class DioHttp {
+  // static var cookieJar = CookieJar();
+  Dio _dio;
+  static DioHttp _instance;
+  BaseOptions _baseOptions;
+
+  static DioHttp getInstance() {
+    if (null == _instance) {
+      _instance = new DioHttp();
+    }
     return _instance;
   }
 
-  HttpConfig() {
-    dio = new Dio();
-    dio.options = BaseOptions(
-        baseUrl: 'https://epdc-changjiang.elinkservice.cn/epdc-api/api/',
-        connectTimeout: 5000,
-        sendTimeout: 5000,
-        receiveTimeout: 5000,
-        headers: {
-          'Authorization':
-              'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0NGMyMzE2MDNhZTEzODM1MTM4ZmUwNTM5ZThiYjE5MSIsImlhdCI6MTYyNTU1OTU4MywiZXhwIjoxNjI2MTY0MzgzfQ.oEgHCUXp0yDnsSfeGgd6BvH9Tph_ixJnbGIFq00XwS8hr57wHcvZHPKOXGkb4u0VDU8Qqt6P3XBETJLGqhG_eQ'
-        },
-        contentType: Headers.formUrlEncodedContentType,
-        responseType: ResponseType.json);
-    dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {
-      print('1' + options.headers.toString());
-      return handler.next(options); //continue
-      // 如果你想完成请求并返回一些自定义数据，你可以resolve一个Response对象 `handler.resolve(response)`。
-      // 这样请求将会被终止，上层then会被调用，then中返回的数据将是你的自定义response.
-      //
-      // 如果你想终止请求并触发一个错误,你可以返回一个`DioError`对象,如`handler.reject(error)`，
-      // 这样请求将被中止并触发异常，上层catchError会被调用。
-    }, onResponse: (response, handler) {
-      // print('2' + response.toString());
-      return handler.resolve(response); // continue
-      // 如果你想终止请求并触发一个错误,你可以 reject 一个`DioError`对象,如`handler.reject(error)`，
-      // 这样请求将被中止并触发异常，上层catchError会被调用。
-    }, onError: (DioError e, handler) {
-      print('3');
-      // Do something with response error
-      return handler.next(e); //continue
-      // 如果你想完成请求并返回一些自定义数据，可以resolve 一个`Response`,如`handler.resolve(response)`。
-      // 这样请求将会被终止，上层then会被调用，then中返回的数据将是你的自定义response.
-    }));
+  DioHttp() {
+    _baseOptions = new BaseOptions(
+      baseUrl: Config.BaseUrl,
+      connectTimeout: 5000,
+      receiveTimeout: 5000,
+      headers: {
+        'Authorization':
+            'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0NGMyMzE2MDNhZTEzODM1MTM4ZmUwNTM5ZThiYjE5MSIsImlhdCI6MTYyNTcxMTAxNCwiZXhwIjoxNjI2MzE1ODE0fQ.z1K8xQFUnHdo7CwOlLRefQyeLcyvWYsbEaAdr7plPh0p_gMnts4ds40zOU2fKJ82GTlCVosF9pLh039Egj27hA'
+      },
+    );
+    _dio = new Dio(_baseOptions);
+    // ..interceptors.add(CookieManager(cookieJar)); //添加cookieJar  拦截器也可以在这里添加
+  }
+
+// get请求
+  get(url, {data, options, withLoading = true}) async {
+    if (withLoading) {
+      LoadingUtils.show(showMsg: "加载中...");
+    }
+    // print('getRequest:==>path:${url}   params:${data}');
+    Response response;
+    try {
+      response = await _dio.get(url, queryParameters: data, options: options);
+      // print('getResponse==>:${response.data}');
+      if (withLoading) {
+        LoadingUtils.dismiss();
+      }
+    } on DioError catch (e) {
+      // print('getError:==>errorType:${e.type}   errorMsg:${e.message}');
+      if (withLoading) {
+        LoadingUtils.dismiss();
+      }
+    }
+
+    ///response.data  请求成功是一个map最终需要将map进行转换 , 请求失败直接返回null
+    ///map:转换 ,将List中的每一个条目执行 map方法参数接收的这个方法,这个方法返回T类型，
+    ///map方法最终会返回一个  Iterable<T>
+    return response.data.toString();
+  }
+
+// post请求
+  post(url,
+      {Map<String, dynamic> parameters,
+      dynamic data,
+      Options options,
+      withLoading = true}) async {
+    if (withLoading) {
+      LoadingUtils.show(showMsg: "加载中...");
+    }
+    // print('postRequest:==>path:${url}   params:${data}');
+    Response response;
+    try {
+      response = await _dio.post(url,
+          queryParameters: parameters, data: data, options: options);
+      // print('postResponse==>:${response.data}');
+      if (withLoading) {
+        LoadingUtils.dismiss();
+      }
+    } on DioError catch (e) {
+      // print('postError:==>errorType:${e.type}   errorMsg:${e.message}');
+      if (withLoading) {
+        LoadingUtils.dismiss();
+      }
+    }
+
+    ///response.data  请求成功是一个map最终需要将map进行转换 , 请求失败直接返回null
+    ///map:转换 ,将List中的每一个条目执行 map方法参数接收的这个方法,这个方法返回T类型，
+    ///map方法最终会返回一个  Iterable<T>
+    return response.data.toString();
   }
 }

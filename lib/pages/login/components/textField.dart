@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_template/pages/home/index.dart';
-import 'package:flutter_template/utils/request.dart';
+import 'package:flutter_template/utils/api.dart';
 
 class LoginInput extends StatelessWidget {
   const LoginInput({Key key}) : super(key: key);
@@ -39,14 +39,16 @@ class CardInput extends StatefulWidget {
 class _CardInputState extends State<CardInput> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     loadData();
   }
 
-  void loadData() async {
-    var res = await HttpConfig.getInstance().dio.get('cjnews/getDjBanner');
-    print('res' + res.toString());
+  void loadData() {
+    Api.getBanner().then((res) {
+      print('banner' + res);
+    }).catchError((e) {
+      //失败
+    });
   }
 
   @override
